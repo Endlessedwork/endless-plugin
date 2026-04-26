@@ -1,0 +1,16 @@
+{
+  "name": "endless",
+  "description": "Thinking frameworks and reasoning skills for Claude Code — OODA Loop, and more to come",
+  "version": "0.1.0",
+  "author": {
+    "name": "alone"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ooda",
+    "thinking",
+    "reasoning",
+    "frameworks",
+    "decision-making"
+  ]
+}
