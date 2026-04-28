@@ -14,6 +14,7 @@ Structured reasoning loop that prevents premature action. Forces systematic obse
 /endless:ooda <description>            # run OODA on a specific problem or task
 /endless:ooda --loop                   # continuous OODA — re-observe after each Act cycle
 /endless:ooda --fast                   # compressed single-pass (skip deep analysis)
+/endless:ooda --research               # force research in OBSERVE regardless of task size
 ```
 
 ## The Loop
@@ -26,31 +27,66 @@ Execute each phase **in order**. Do NOT skip phases. Output each phase under its
 
 **Goal**: Gather raw facts. No interpretation yet.
 
-Collect information relevant to the task:
+Collect information relevant to the task in 3 steps — in order:
 
-- **Codebase state**: Read relevant files, check git status/log, identify recent changes
-- **Error signals**: Logs, stack traces, test failures, linter warnings
-- **Context**: User's request, constraints, environment, dependencies
-- **Unknowns**: What information is missing? What assumptions are being made?
+**Step 1: Scan local**
+- Read relevant files, check git status/log, identify recent changes
+- Collect error signals: logs, stack traces, test failures, linter warnings
+- Map constraints from existing code: dependencies, versions, patterns in use
+
+**Step 2: List unknowns**
+- What information is still missing after scanning local?
+- Classify each unknown: `critical` (blocks decision) or `minor` (can assume)
+
+**Step 3: Resolve critical unknowns**
+For each `critical` unknown — choose resolution method:
+- **Local resolvable** → Read more files, Grep deeper, check package.json
+- **External resolvable** → Research (see below)
+- **Unresolvable** → flag to user before proceeding
+
+**Research (triggered by critical unknowns OR --research flag)**
+
+Research is proportional to task complexity:
+- Simple task (fix typo, rename variable) → skip unless `--research`
+- Complex task (new project, library upgrade, architecture decision) → always research
+
+Research process:
+```
+critical unknown → WebSearch("<specific query> <current year>")
+                        ↓
+               evaluate results (title + snippet)
+                        ↓
+               if snippet resolves unknown → done
+               if need more detail → WebFetch(most relevant URL)
+                        ↓
+               extract only facts relevant to this task
+               discard the rest
+```
+
+Trusted sources (prefer in order): official docs, GitHub repo, changelog, Stack Overflow
 
 **Output format**:
 ```
 ## OBSERVE
 
-**Facts gathered:**
-- [fact 1]
-- [fact 2]
-- ...
+**Facts (local):**
+- [fact from codebase]
 
-**Unknowns / Missing info:**
-- [unknown 1]
-- ...
+**Facts (research):**
+- [fact from web — source: URL]
+
+**Unknowns resolved:**
+- [unknown] → [how resolved]
+
+**Unknowns remaining (minor):**
+- [unknown] — assuming [assumption]
 ```
 
 **Rules**:
 - Use tools (Read, Grep, Glob, Bash) to gather real data — do NOT rely on assumptions
-- If critical unknowns exist, resolve them NOW before moving to Orient
+- Research goal-directed only — search to resolve a specific unknown, then stop
 - List facts, not opinions
+- If critical unknown cannot be resolved → ask user before proceeding to ORIENT
 
 ---
 
